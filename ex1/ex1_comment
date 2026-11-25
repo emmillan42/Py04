@@ -1,0 +1,110 @@
+import sys
+import typing
+
+
+# Abre un fichero en el modo indicado ("r" lectura por defecto, "w"
+# escritura). Devuelve el objeto fichero o None si open() falla.
+def open_file(file_name: str, mode: str = "r") -> typing.IO[str] | None:
+    try:
+        return open(file_name, mode, encoding="utf-8")
+    except OSError as e:
+        # OSError cubre Errno 2 (no existe), 13 (permisos), 21 (directorio).
+        # Con "w", open() crea el fichero o LO VACIA si ya existe.
+        print(f"Error opening file '{file_name}': {e}")
+        return None
+
+
+# Abre, lee y cierra. Devuelve el contenido o None si algo falla.
+# No imprime el contenido: eso lo decide main().
+def read_file(file_name: str) -> str | None:
+    file = open_file(file_name)
+    if file is None:
+        return None
+    try:
+        # El return dentro del try no salta el finally: close() se ejecuta.
+        return file.read()
+    except (OSError, UnicodeDecodeError) as e:
+        # UnicodeDecodeError es un ValueError: el fichero no es UTF-8 valido.
+        print(f"Error reading file '{file_name}': {e}")
+        return None
+    finally:
+        file.close()
+
+
+# Anade "#" al final de cada linea. No imprime nada (solo transforma).
+def transform(content: str) -> str:
+    result = ""
+    for char in content:
+        if char == "\n":
+            result += "#\n"
+        else:
+            result += char
+    # Ultima linea sin "\n" final: la cerramos con "#" (sin inventar un "\n").
+    if content and not content.endswith("\n"):
+        result += "#"
+    return result
+
+
+# Escribe content en file_name. Devuelve True si todo fue bien.
+def save_file(file_name: str, content: str) -> bool:
+    file = open_file(file_name, "w")
+    if file is None:
+        return False
+    try:
+        # write() copia al buffer; el volcado a disco ocurre en close().
+        file.write(content)
+        return True
+    except OSError as e:
+        print(f"Error writing file '{file_name}': {e}")
+        return False
+    finally:
+        file.close()
+
+
+# Imprime el texto entre "---", como el subject.
+def show(content: str) -> None:
+    print("---")
+    # end="" porque el contenido ya acaba en "\n" (evita linea en blanco).
+    print(content, end="")
+    # Blindaje: si no acaba en "\n", el "---" no debe quedar pegado.
+    if content and not content.endswith("\n"):
+        print()
+    print("---")
+
+
+def main() -> None:
+    # sys.argv[0] es el script, como argv[0] en C. sys.exit() no autorizado.
+    if len(sys.argv) != 2:
+        print("Usage: ft_archive_creation.py <file>")
+        return
+    name = sys.argv[1]
+    print("=== Cyber Archives Recovery & Preservation ===")
+    print(f"Accessing file '{name}'")
+    content = read_file(name)
+    if content is None:
+        return
+    show(content)
+    # El fichero de entrada YA esta cerrado (read_file lo cerro): el
+    # mensaje es cierto y podemos sobrescribirlo sin problema si se pide.
+    print(f"File '{name}' closed.")
+    new_content = transform(content)
+    print("Transform data:")
+    show(new_content)
+    try:
+        new_name = input("Enter new file name (or empty): ")
+    except EOFError:
+        # Ctrl+D o stdin vacio: tratamos como "no guardar".
+        print()
+        new_name = ""
+    if new_name == "":
+        print("Not saving data.")
+        return
+    print(f"Saving data to '{new_name}'")
+    if save_file(new_name, new_content):
+        print(f"Data saved in file '{new_name}'.")
+    else:
+        print("Data not saved.")
+
+
+if __name__ == "__main__":
+    main()

@@ -5,10 +5,10 @@ import typing
 # Devuelve el fichero abierto, o None si open() falla.
 # typing.IO[str] = objeto fichero en modo texto (io.TextIOWrapper).
 # "| None": la funcion puede devolver None (Python 3.10+).
-def open_file(file_name: str) -> typing.IO[str] | None:
+def open_file(file_name: str, mode: str = "r") -> typing.IO[str] | None:
     try:
         # "r" = solo lectura; encoding fija UTF-8 (no depende del locale).
-        return open(file_name, "r", encoding="utf-8")
+        return open(file_name, mode, encoding="utf-8")
     except OSError as e:
         # OSError agrupa FileNotFoundError (Errno 2), PermissionError
         # (Errno 13), IsADirectoryError (Errno 21), etc.
@@ -25,7 +25,7 @@ def main() -> None:
     name = sys.argv[1]
     print("=== Cyber Archives Recovery ===")
     print(f"Accessing file '{name}'")
-    file = open_file(name)
+    file = open_file(name, "r")
     if file is None:
         # El error ya se imprimio en open_file; no hay nada que cerrar.
         return

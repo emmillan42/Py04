@@ -2,9 +2,9 @@ import sys
 import typing
 
 
-def open_file(file_name: str) -> typing.IO[str] | None:
+def open_file(file_name: str, mode: str = "r") -> typing.IO[str] | None:
     try:
-        return open(file_name, "r", encoding="utf-8")
+        return open(file_name, mode, encoding="utf-8")
     except OSError as e:
         print(f"Error opening file '{file_name}': {e}")
         return None
@@ -17,7 +17,7 @@ def main() -> None:
     name = sys.argv[1]
     print("=== Cyber Archives Recovery ===")
     print(f"Accessing file '{name}'")
-    file = open_file(name)
+    file = open_file(name, "r")
     if file is None:
         return
     try:
